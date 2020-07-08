@@ -84,8 +84,9 @@ RUN mkdir -p /usr/share/sugar/activities
 
 WORKDIR /usr/share/sugar/activities
 RUN git clone https://github.com/sugarlabs/Terminal-activity Terminal.activity
+
 # clean
-# RUN rm -rf /var/lib/apt/lists/* && apt clean
+RUN rm -rf /var/lib/apt/lists/* && apt clean
 RUN rm -rf /usr/src/app/sugar*
 
 # test
