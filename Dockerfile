@@ -10,14 +10,15 @@ RUN apt update
 # enable source packages
 RUN sed -i '/deb-src/s/^# //' /etc/apt/sources.list
 RUN apt update
+RUN apt install -y git
 
 WORKDIR /usr/src/app
 
-COPY sugar .
-COPY sugar-artwork .
-COPY sugar-datastore .
-COPY sugar-toolkit-gtk3 . 
-COPY sugar-toolkit . 
+RUN git clone https://github.com/sugarlabs/sugar --depth=1
+RUN git clone https://github.com/sugarlabs/sugar-artwork --depth=1
+RUN git clone https://github.com/sugarlabs/sugar-datastore --depth=1
+RUN git clone https://github.com/sugarlabs/sugar-toolkit --depth=1
+RUN git clone https://github.com/sugarlabs/sugar-toolkit-gtk3 --depth=1
 
 # install build time deps
 # RUN apt build-dep sugar-datastore
@@ -27,12 +28,6 @@ RUN apt build-dep -y sugar-toolkit-gtk3
 # RUN apt build-dep -y sugar
 
 RUN apt install -y python-six python3-six python3-empy
-
-ADD sugar /usr/src/app/sugar
-ADD sugar-toolkit /usr/src/app/sugar-toolkit
-ADD sugar-artwork /usr/src/app/sugar-artwork
-ADD sugar-toolkit-gtk3 /usr/src/app/sugar-toolkit-gtk3
-ADD sugar-datastore /usr/src/app/sugar-datastore
 
 # make sugar-artwork
 WORKDIR /usr/src/app/sugar-artwork
@@ -88,7 +83,7 @@ RUN apt install -y telepathy-mission-control-5
 RUN mkdir -p /usr/share/sugar/activities
 
 WORKDIR /usr/share/sugar/activities
-ADD Terminal-activity /usr/share/sugar/activities/Terminal.activity
+RUN git clone https://github.com/sugarlabs/Terminal-activity Terminal.activity
 # clean
 # RUN rm -rf /var/lib/apt/lists/* && apt clean
 RUN rm -rf /usr/src/app/sugar*
