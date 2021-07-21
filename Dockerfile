@@ -1,3 +1,6 @@
+# (C) MIT License 2020-21
+# Some part of this file is copied from https://github.com/gitpod-io/workspace-images/tree/master/full-vnc
+
 FROM ubuntu:latest
 LABEL maintainer="srevinsaju@sugarlabs.org"
 LABEL version="0.1"
@@ -8,6 +11,10 @@ ARG DEBIAN_FRONTEND=noninteractive
 RUN useradd -ms /bin/bash sugar && usermod -a -G sudo sugar
 
 WORKDIR /usr/src/app
+
+# Add VNC startup script
+COPY start-vnc-session.sh /usr/bin/
+RUN chmod +x /usr/bin/start-vnc-session.sh
 
 RUN \
         # enable deb-src source repositories
@@ -69,7 +76,26 @@ RUN mkdir -p /usr/share/sugar/activities && \
 # test
 RUN mkdir -p /usr/lib/python3.8/dist-packages && mv /usr/lib/python3.8/site-packages/* /usr/lib/python3.8/dist-packages/.
 
+# Install Xvfb
+RUN apt-get update \
+    && apt-get install -yq xvfb x11vnc xterm \
+    && apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/*
+
+# Install novnc
+RUN git clone https://github.com/novnc/noVNC.git /opt/novnc \
+    && git clone https://github.com/novnc/websockify /opt/novnc/utils/websockify
+COPY novnc-index.html /opt/novnc/index.html
+
 USER sugar
+
+# This is a bit of a hack. At the moment we have no means of starting background
+# tasks from a Dockerfile. This workaround checks, on each bashrc eval, if the X
+# server is running on screen 0, and if not starts Xvfb, x11vnc and novnc.
+RUN echo "[ ! -e /tmp/.X0-lock ] && (/usr/bin/start-vnc-session.sh 0 &> /tmp/display-0.log)" >> ~/.bashrc
+RUN echo "export DISPLAY=:0" >> ~/.bashrc
+
+
+
 WORKDIR /home/sugar
 
 CMD ["/usr/bin/sugar"]
