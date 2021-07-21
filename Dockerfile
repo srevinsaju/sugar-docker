@@ -23,6 +23,19 @@ RUN \
         # cleanup
         rm -rf /var/lib/apt/lists/* && apt clean && rm -rf /var/lib/apt/lists/*
 
+RUN git clone https://github.com/sugarlabs/sugar-toolkit-gtk3 --depth=1 && \
+    cd sugar-toolkit-gtk3 && \
+    # install some build dependencies
+    apt update && \
+    apt build-dep -y sugar-artwork sugar-toolkit-gtk3 && \
+    # install it systemwide
+    PYTHON=/usr/bin/python3 ./autogen.sh --with-python3 --prefix=/usr && \
+    make && make install \
+    cd .. && \
+    rm -rf sugar-toolkit-gtk3 && \
+    # cleanup
+    rm -rf /var/lib/apt/lists/* && apt clean && rm -rf /var/lib/apt/lists/*
+
 RUN git clone https://github.com/sugarlabs/sugar --depth=1 && \
     cd sugar && \
     # install it systemwide
@@ -39,20 +52,6 @@ RUN git clone https://github.com/sugarlabs/sugar-datastore --depth=1 && \
     make && make install \
     cd .. && \
     rm -rf sugar-datastore
-
-
-RUN git clone https://github.com/sugarlabs/sugar-toolkit-gtk3 --depth=1 && \
-    cd sugar-toolkit-gtk3 && \
-    # install some build dependencies
-    apt update && \
-    apt build-dep -y sugar-artwork sugar-toolkit-gtk3 && \
-    # install it systemwide
-    PYTHON=/usr/bin/python3 ./autogen.sh --with-python3 --prefix=/usr && \
-    make && make install \
-    cd .. && \
-    rm -rf sugar-toolkit-gtk3 && \
-    # cleanup
-    rm -rf /var/lib/apt/lists/* && apt clean && rm -rf /var/lib/apt/lists/*
 
 RUN git clone https://github.com/sugarlabs/sugar-artwork --depth=1 && \
     cd sugar-artwork && \
