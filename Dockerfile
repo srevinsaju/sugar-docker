@@ -3,99 +3,72 @@ LABEL maintainer="srevinsaju@sugarlabs.org"
 LABEL version="0.1"
 LABEL description="A docker image with prebuilt Sugar Desktop"
 ARG DEBIAN_FRONTEND=noninteractive
-RUN apt update
 
-# clone Sugar and deps
-
-# enable source packages
-RUN sed -i '/deb-src/s/^# //' /etc/apt/sources.list
-RUN apt update
-RUN apt install -y git
+# create a user
+RUN useradd -ms /bin/bash sugar && usermod -a -G sudo sugar
 
 WORKDIR /usr/src/app
 
-RUN git clone https://github.com/sugarlabs/sugar --depth=1
-RUN git clone https://github.com/sugarlabs/sugar-artwork --depth=1
-RUN git clone https://github.com/sugarlabs/sugar-datastore --depth=1
-RUN git clone https://github.com/sugarlabs/sugar-toolkit --depth=1
-RUN git clone https://github.com/sugarlabs/sugar-toolkit-gtk3 --depth=1
+RUN \
+        # enable deb-src source repositories
+        sed -i '/deb-src/s/^# //' /etc/apt/sources.list && \
+        # install the runtime dependencies
+        apt update && apt install -y git python3-decorator python3-dbus gir1.2-gstreamer-1.0 \
+        gir1.2-soup-2.4 gir1.2-wnck-3.0 gir1.2-webkit2-4.0 gir1.2-vte-2.91 \
+        gir1.2-telepathyglib-0.12 python3-xapian python3-dateutil gir1.2-gtksource-3.0 \
+        gir1.2-xkl-1.0 python3-pip python3-gi-cairo telepathy-gabble sudo \
+        metacity telepathy-mission-control-5 \
+        python-six python3-six python3-empy python3-pip && \
+        python3 -m pip install gwebsockets && \
+        # cleanup
+        rm -rf /var/lib/apt/lists/* && apt clean && rm -rf /var/lib/apt/lists/*
 
-# install build time deps
-# RUN apt build-dep sugar-datastore
-RUN apt build-dep -y sugar-artwork
-# RUN apt build-dep -y sugar-toolkit 
-RUN apt build-dep -y sugar-toolkit-gtk3
-# RUN apt build-dep -y sugar
+RUN git clone https://github.com/sugarlabs/sugar-toolkit-gtk3 --depth=1 && \
+    cd sugar-toolkit-gtk3 && \
+    # install some build dependencies
+    apt update && \
+    apt build-dep -y sugar-artwork sugar-toolkit-gtk3 && \
+    # install it systemwide
+    PYTHON=/usr/bin/python3 ./autogen.sh --with-python3 --prefix=/usr && \
+    make && make install && \
+    cd .. && \
+    rm -rf sugar-toolkit-gtk3 && \
+    # cleanup
+    rm -rf /var/lib/apt/lists/* && apt clean && rm -rf /var/lib/apt/lists/*
 
-RUN apt install -y python-six python3-six python3-empy
+RUN git clone https://github.com/sugarlabs/sugar --depth=1 && \
+    cd sugar && \
+    # install it systemwide
+    PYTHON=/usr/bin/python3 ./autogen.sh --with-python3 --prefix=/usr && \
+    make && make install && \
+    cd .. && \
+    rm -rf sugar
 
-# make sugar-artwork
-WORKDIR /usr/src/app/sugar-artwork
-RUN PYTHON=/usr/bin/python3 ./autogen.sh --with-python3 --prefix=/usr
-RUN make                                 
-RUN make install
 
-# make sugar-toolkit-gtk3
-WORKDIR /usr/src/app/sugar-toolkit-gtk3
-RUN PYTHON=/usr/bin/python3 ./autogen.sh --with-python3 --prefix=/usr
-RUN make                                 
-RUN make install
+RUN git clone https://github.com/sugarlabs/sugar-datastore --depth=1 && \
+    cd sugar-datastore && \
+    # install it systemwide
+    PYTHON=/usr/bin/python3 ./autogen.sh --with-python3 --prefix=/usr && \
+    make && make install && \
+    cd .. && \
+    rm -rf sugar-datastore
 
-# make sugar-datastore
-RUN apt install -y python3-dev
-WORKDIR /usr/src/app/sugar-datastore
-RUN PYTHON=/usr/bin/python3 ./autogen.sh --with-python3 --prefix=/usr
-RUN make                                 
-RUN make install
- 
-# make sugar
-WORKDIR /usr/src/app/sugar
-RUN PYTHON=/usr/bin/python3 ./autogen.sh --with-python3 --prefix=/usr
-RUN make                                 
-RUN make install 
-
-RUN apt install -y python3-decorator python3-dbus gir1.2-gstreamer-1.0
-RUN apt install -y gir1.2-soup-2.4
-RUN apt install -y gir1.2-wnck-3.0 gir1.2-webkit2-4.0 gir1.2-vte-2.91
-RUN apt install -y gir1.2-telepathyglib-0.12
-RUN apt install -y python3-xapian
-RUN apt install -y python3-dateutil
-RUN apt install -y gir1.2-gtksource-3.0
-RUN apt install -y gir1.2-xkl-1.0
-
-# install gwebsockets
-RUN apt install -y python3-pip
-RUN python3 -m pip install gwebsockets
-
-# install metacity
-RUN apt install -y metacity 
-
-# install cairo
-RUN apt install -y python3-gi-cairo
-RUN apt install -y telepathy-gabble
-# install sudo
-RUN apt install -y sudo
-
-# install telepathy mission control
-RUN apt install -y telepathy-mission-control-5
+RUN git clone https://github.com/sugarlabs/sugar-artwork --depth=1 && \
+    cd sugar-artwork && \
+    # install it systemwide
+    PYTHON=/usr/bin/python3 ./autogen.sh --with-python3 --prefix=/usr && \
+    make && make install && \
+    cd .. && \
+    rm -rf sugar-artwork
 
 # create activities directory
-RUN mkdir -p /usr/share/sugar/activities
+RUN mkdir -p /usr/share/sugar/activities && \
+        git clone https://github.com/sugarlabs/Terminal-activity /usr/share/sugar/activities/Terminal.activity
 
-WORKDIR /usr/share/sugar/activities
-RUN git clone https://github.com/sugarlabs/Terminal-activity Terminal.activity
-
-# clean
-RUN rm -rf /var/lib/apt/lists/* && apt clean
-RUN rm -rf /usr/src/app/sugar*
 
 # test
-RUN mkdir -p /usr/lib/python3.8/dist-packages
-RUN mv /usr/lib/python3.8/site-packages/* /usr/lib/python3.8/dist-packages/.
+RUN mkdir -p /usr/lib/python3.8/dist-packages && mv /usr/lib/python3.8/site-packages/* /usr/lib/python3.8/dist-packages/.
 
-# create a user
-RUN useradd -ms /bin/bash sugar
-RUN usermod -a -G sudo sugar
 USER sugar
 WORKDIR /home/sugar
 
