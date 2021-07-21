@@ -12,17 +12,6 @@ RUN useradd -ms /bin/bash sugar && usermod -a -G sudo sugar
 
 WORKDIR /usr/src/app
 
-
-# Install Xvfb
-RUN apt-get update \
-    && apt-get install -yq xvfb x11vnc xterm \
-    && apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/*
-
-# Install novnc
-RUN git clone https://github.com/novnc/noVNC.git /opt/novnc \
-    && git clone https://github.com/novnc/websockify /opt/novnc/utils/websockify
-COPY novnc-index.html /opt/novnc/index.html
-
 # Add VNC startup script
 COPY start-vnc-session.sh /usr/bin/
 RUN chmod +x /usr/bin/start-vnc-session.sh
@@ -87,8 +76,17 @@ RUN mkdir -p /usr/share/sugar/activities && \
 # test
 RUN mkdir -p /usr/lib/python3.8/dist-packages && mv /usr/lib/python3.8/site-packages/* /usr/lib/python3.8/dist-packages/.
 
-USER sugar
+# Install Xvfb
+RUN apt-get update \
+    && apt-get install -yq xvfb x11vnc xterm \
+    && apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/*
 
+# Install novnc
+RUN git clone https://github.com/novnc/noVNC.git /opt/novnc \
+    && git clone https://github.com/novnc/websockify /opt/novnc/utils/websockify
+COPY novnc-index.html /opt/novnc/index.html
+
+USER sugar
 
 # This is a bit of a hack. At the moment we have no means of starting background
 # tasks from a Dockerfile. This workaround checks, on each bashrc eval, if the X
