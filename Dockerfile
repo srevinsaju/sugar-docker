@@ -30,7 +30,7 @@ RUN git clone https://github.com/sugarlabs/sugar-toolkit-gtk3 --depth=1 && \
     apt build-dep -y sugar-artwork sugar-toolkit-gtk3 && \
     # install it systemwide
     PYTHON=/usr/bin/python3 ./autogen.sh --with-python3 --prefix=/usr && \
-    make && make install \
+    make && make install && \
     cd .. && \
     rm -rf sugar-toolkit-gtk3 && \
     # cleanup
@@ -40,7 +40,7 @@ RUN git clone https://github.com/sugarlabs/sugar --depth=1 && \
     cd sugar && \
     # install it systemwide
     PYTHON=/usr/bin/python3 ./autogen.sh --with-python3 --prefix=/usr && \
-    make && make install \
+    make && make install && \
     cd .. && \
     rm -rf sugar
 
@@ -49,7 +49,7 @@ RUN git clone https://github.com/sugarlabs/sugar-datastore --depth=1 && \
     cd sugar-datastore && \
     # install it systemwide
     PYTHON=/usr/bin/python3 ./autogen.sh --with-python3 --prefix=/usr && \
-    make && make install \
+    make && make install && \
     cd .. && \
     rm -rf sugar-datastore
 
@@ -57,7 +57,7 @@ RUN git clone https://github.com/sugarlabs/sugar-artwork --depth=1 && \
     cd sugar-artwork && \
     # install it systemwide
     PYTHON=/usr/bin/python3 ./autogen.sh --with-python3 --prefix=/usr && \
-    make && make install \
+    make && make install && \
     cd .. && \
     rm -rf sugar-artwork
 
